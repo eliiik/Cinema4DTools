@@ -1,0 +1,18 @@
+import c4d
+from c4d.modules import mograph as mo
+#Welcome to the world of Python
+
+flag = 1
+obj = op.GetObject()
+
+def main():
+    global flag
+    isUpdate = obj[c4d.ID_USERDATA, 1]
+    
+    if isUpdate:
+        
+        obj[c4d.MG_POLYSURFACE_COUNT]+= flag
+        if flag > 0:
+            flag = -1
+        else:
+            flag = 1
