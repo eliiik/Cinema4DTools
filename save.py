@@ -6,31 +6,61 @@ import os
 import c4d
 from c4d import documents
 
+
+
 def main():
     # 获取文件路径与文件名    
     doc = documents.GetActiveDocument()
-    path = doc.GetDocumentPath()
     name = doc.GetDocumentName()
+    originPath = doc.GetDocumentPath()
+    originFilePath = os.path.join(originPath, name)
+    originFilePath = os.path.normpath(originFilePath)
+
+    if doc.SearchObject("FileSaver"):
+        fileSaver = doc.SearchObject("FileSaver")
+    else:
+        print "You need to run 'createSaveOutUserData.py' first"
+        return
+
+    isOutputFbx = fileSaver[c4d.ID_USERDATA, 1]
+    isSavingOriginFile = fileSaver[c4d.ID_USERDATA, 2]
+    filepath = fileSaver[c4d.ID_USERDATA, 3]
+
+    if isOutputFbx:
+        if len(filepath) == 0:
+            print "You need to specify the file path"
+            return
+
+    filepath = os.path.normpath(filepath)
+    filepath = "/".join(filepath.split("\\")[:-1])
     # 将文件后缀改为.fbx
     if name[-3:] != "fbx":
-        try:
+        if len(name.split(".")) == 1:
+            name = name + ".fbx"
+        else:
             index = -1
             while name[index] != '.':
                 index -= 1 
             name = name[:(index+1)]+"fbx"
             print "convert filetype to .fbx"
-        except IndexError:
-            print "maybe you need to save your file first"
-            return
     
-    path = os.path.join(path,name)
+    filepath = os.path.join(filepath,name)
+    filepath = os.path.normpath(filepath)
+
     # 导出模型到原文件路径
-    if documents.SaveDocument(doc,path,c4d.SAVEDOCUMENTFLAGS_DONTADDTORECENTLIST,1026370):
-        print "export document to: " + path
+    if documents.SaveDocument(doc,filepath,c4d.SAVEDOCUMENTFLAGS_DONTADDTORECENTLIST,1026370):
+        print "export document to: " + filepath
     else:
         print "export failed"
 
+    if isSavingOriginFile:
+        if documents.SaveDocument(doc,originFilePath,c4d.SAVEDOCUMENTFLAGS_DONTADDTORECENTLIST,c4d.FORMAT_C4DEXPORT):
+            print "save origin file to: " + originFilePath
+        else:
+            print "save origin file failed"
+
     c4d.EventAdd() 
+
 
 '''
     op = {}
